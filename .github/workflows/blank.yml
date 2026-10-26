@@ -1,0 +1,43 @@
+name: Build DH Browser Android TV APK
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch: # Permite compilar manualmente desde la pestaña 'Actions' de GitHub
+
+jobs:
+  build:
+    name: Build Android TV Release APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: ☕ Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu' # o 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: 📱 Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: 🔧 Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: 🛠️ Build APK with Gradle (Release & Debug)
+        run: |
+          ./gradlew assembleDebug --stacktrace
+          # Para compilar release sin firma o si tienes firma configurada:
+          # ./gradlew assembleRelease
+
+      - name: 📦 Upload APK as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dh-browser-tv-apk
+          path: app/build/outputs/apk/**/*.apk
+          retention-days: 14
